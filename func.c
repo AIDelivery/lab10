@@ -9,7 +9,7 @@
 /* semaphore POSIX */
 #include <semaphore.h>
 
-#define SHARED_KEY 1014
+#define SHARED_KEY 1016
 #define SIZE_BUF 512
 
 // int shm_id = -1;

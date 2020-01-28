@@ -26,15 +26,18 @@ int main(int argc, char* argv[]) {
         sharedContent->mes.buf[sharedContent->mes.left] = ch;
         sharedContent->mes.left = (sharedContent->mes.left + 1) % SIZE_BUF;
         
-        usleep(100);
+//         usleep(100);
         sem_post(&(sharedContent->full));
     }
     
+    printf("Copying to shared memory was ended\n");
+    
     sem_post(&(sharedContent->empty));
+    while(!sharedContent->cons_id);
+    printf("Signal sending\n");
     kill(sharedContent->cons_id, SIGQUIT);
-    printf("Sending was ended\n");
     
-    
+    /*
     while (sem_f != 0) {
         sem_getvalue(&(sharedContent->empty), &sem_e);
         sem_getvalue(&(sharedContent->full), &sem_f);
@@ -45,10 +48,16 @@ int main(int argc, char* argv[]) {
     
     printf("Empty after ALL: %d\n", sem_e);
     printf("Full after ALL: %d\n", sem_f);
+    */
     
+    printf("Waiting while consumer is ready\n");
+    
+    while (sem_e != 512) {
+        sem_getvalue(&(sharedContent->empty), &sem_e);
+        printf("Empty in loop: %d\n", sem_e);
+    }
     
     shmctl(shm_id, IPC_RMID, NULL);
     closeFile();
-
     return 0;
 }

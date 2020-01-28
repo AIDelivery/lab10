@@ -4,15 +4,28 @@
 #include <iostream>
 using namespace std;
 
+int sem_f = 0, sem_e = 0;
+shared* sharedContent;
+
 bool provider_is_dead = false;
-void registr (int sig) { provider_is_dead = true; }
+void registr (int sig) {
+    printf("\n\n[Provider terminated]\n\n");
+    
+    provider_is_dead = true;
+    sem_getvalue(&(sharedContent->full), &sem_f);
+    sem_getvalue(&(sharedContent->empty), &sem_e);
+    
+    if(sem_f == 0) {
+        printf("\n\t- - - End of message - - -\n");
+        exit(EXIT_SUCCESS);
+    }
+}
 
 
 int main(int argc, char* argv[]) {
     int shm_id = shmget(SHARED_KEY, sizeof(shared_data), (IPC_CREAT | 0666));
     void* shmaddr = shmat(shm_id, NULL, 0);
-    shared* sharedContent = (shared*) shmaddr;
-    int sem_f = 0, sem_e;
+    sharedContent = (shared*) shmaddr;
     char ch;
     
     sharedContent->cons_id = getpid();
@@ -21,13 +34,8 @@ int main(int argc, char* argv[]) {
 
     printf("\t- - - Message from provider - - -\n");
     
-    while (true) {cout << sem_f << ' ' << provider_is_dead << endl;
-        sem_getvalue(&(sharedContent->full), &sem_f);
-        sem_getvalue(&(sharedContent->empty), &sem_e);
-        if (provider_is_dead && sem_f == 0)
-            break;
-        else
-            sem_wait(&(sharedContent->full));
+    while (true) {
+        sem_wait(&(sharedContent->full));
         
         fflush(stdout);
         ch = sharedContent->mes.buf[sharedContent->mes.right];
